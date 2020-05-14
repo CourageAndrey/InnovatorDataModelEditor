@@ -1,0 +1,41 @@
+﻿<Window x:Class="IDME.WpfEditor.Dialogs.ItemTypesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Item Types" Width="640" Height="480">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="2*" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+		<GroupBox Grid.Row="0" Header="Item types:">
+			<DataGrid Margin="2" Name="itemTypesGrid" AutoGenerateColumns="False" IsReadOnly="False">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Name" Binding="{Binding Path=Name, Mode=TwoWay}" />
+					<DataGridCheckBoxColumn Header="Is Relationship" Binding="{Binding Path=IsRelationship, Mode=TwoWay}" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</GroupBox>
+		<GridSplitter Grid.Row="1" Height="5" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+		<GroupBox Grid.Row="2" Header="Properties:">
+			<DataGrid	Margin="2" Name="propertiesGrid" AutoGenerateColumns="False" IsReadOnly="False"
+						ItemsSource="{Binding ElementName=itemTypesGrid, Path=SelectedItem.Properties, Mode=OneWay}">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Name" Binding="{Binding Path=Name, Mode=TwoWay}" />
+					<DataGridComboBoxColumn Header="Data Source" SelectedValueBinding="{Binding Path=DataSourceType, Mode=TwoWay}" DisplayMemberPath="Name" x:Name="comboBoxPropertyDataSource" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</GroupBox>
+		<GridSplitter Grid.Row="3" Height="5" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+		<GroupBox Grid.Row="4" Header="Relationships:">
+			<DataGrid	Margin="2" Name="relationshipsGrid" AutoGenerateColumns="False" IsReadOnly="False" InitializingNewItem="newRelationshipsInitializing"
+						ItemsSource="{Binding ElementName=itemTypesGrid, Path=SelectedItem.Relationships, Mode=OneWay}">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Relationship name:" Binding="{Binding Path=Name, Mode=TwoWay}" />
+				</DataGrid.Columns>
+			</DataGrid>
+		</GroupBox>
+	</Grid>
+</Window>

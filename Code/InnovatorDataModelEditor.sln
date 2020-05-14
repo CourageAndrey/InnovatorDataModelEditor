@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.960
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IDME.WpfEditor", "IDME.WpfEditor\IDME.WpfEditor.csproj", "{630E92D5-97FF-4149-89AC-36384B884BE5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Innovator libs", "Innovator libs", "{4E12E5E3-1BAD-4E07-95E9-92DAA8456294}"
+	ProjectSection(SolutionItems) = preProject
+		..\Innovator libs\Aras.ES.dll = ..\Innovator libs\Aras.ES.dll
+		..\Innovator libs\Aras.Net.dll = ..\Innovator libs\Aras.Net.dll
+		..\Innovator libs\Aras.OAuth.Model.dll = ..\Innovator libs\Aras.OAuth.Model.dll
+		..\Innovator libs\Aras.Server.Core.dll = ..\Innovator libs\Aras.Server.Core.dll
+		..\Innovator libs\Aras.TDF.Base.dll = ..\Innovator libs\Aras.TDF.Base.dll
+		..\Innovator libs\Conversion.Base.dll = ..\Innovator libs\Conversion.Base.dll
+		..\Innovator libs\ConversionManager.dll = ..\Innovator libs\ConversionManager.dll
+		..\Innovator libs\FileExchangeService.dll = ..\Innovator libs\FileExchangeService.dll
+		..\Innovator libs\IOM.dll = ..\Innovator libs\IOM.dll
+		..\Innovator libs\SPConnector.dll = ..\Innovator libs\SPConnector.dll
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{630E92D5-97FF-4149-89AC-36384B884BE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{630E92D5-97FF-4149-89AC-36384B884BE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{630E92D5-97FF-4149-89AC-36384B884BE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{630E92D5-97FF-4149-89AC-36384B884BE5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AC6EE982-FA14-410B-959E-545713C2B740}
+	EndGlobalSection
+EndGlobal

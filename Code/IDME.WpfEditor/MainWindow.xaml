@@ -1,0 +1,32 @@
+﻿<Window x:Class="IDME.WpfEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Innovator Data Model Editor" Height="450" Width="800" Icon="/IDME.WpfEditor;component/Aras icon.ico"
+        Loaded="onWindowLoaded" Closing="onWindowClosing" MouseDown="canvasMouseDown">
+	<DockPanel LastChildFill="True" Name="dockPanelContainer">
+		<StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+			<Button ToolTip="New model" Margin="5" Click="newMenuClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/New.png" />
+			</Button>
+			<Button ToolTip="Open model" Margin="5" Click="openMenuClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/Open.png" />
+			</Button>
+			<Button ToolTip="Save" Margin="5" Click="saveMenuClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/Save.png" />
+			</Button>
+			<Button ToolTip="Save As" Margin="5" Click="saveAsMenuClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/SaveAs.png" />
+			</Button>
+			<Button ToolTip="Item Types" Margin="5" Click="itemTypesClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/ItemType.png" />
+			</Button>
+		</StackPanel>
+		<Canvas x:Name="_viewScreen" />
+		<Popup IsOpen="False" PlacementTarget="{Binding ElementName=_viewScreen}" Placement="MousePoint" Name="_viewScreenPopup" PopupAnimation="Fade" StaysOpen="False">
+			<StackPanel Orientation="Vertical" Background="{x:Static SystemColors.MenuBrush}">
+				<Button Margin="5" BorderThickness="0" Background="{x:Static SystemColors.MenuBrush}" Content="Add item..." Click="addItemMenuClick" />
+				<Button Margin="5" BorderThickness="0" Background="{x:Static SystemColors.MenuBrush}" Content="Delete all items" Click="clearItemsMenuClick" />
+			</StackPanel>
+		</Popup>
+	</DockPanel>
+</Window>

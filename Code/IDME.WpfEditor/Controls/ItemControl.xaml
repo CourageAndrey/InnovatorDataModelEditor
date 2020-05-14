@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="IDME.WpfEditor.Controls.ItemControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MouseDown="onMouseDown" MouseUp="onMouseUp">
+	<GroupBox Name="_header">
+		<GroupBox.ContextMenu>
+			<ContextMenu Name="_itemControlPopup">
+				<MenuItem Header="Add relationship..." Click="addRelationshipMenuClick" />
+				<MenuItem Header="Delete item" Click="deleteItemMenuClick" />
+			</ContextMenu>
+		</GroupBox.ContextMenu>
+		<Grid Name="_propertiesGrid">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="Auto" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+		</Grid>
+	</GroupBox>
+</UserControl>
