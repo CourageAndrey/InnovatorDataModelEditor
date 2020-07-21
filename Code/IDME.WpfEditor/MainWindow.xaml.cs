@@ -256,6 +256,7 @@ namespace IDME.WpfEditor
 			RestoreDirectory = true,
 			Title = "Export image...",
 		};
+		private readonly PrintDialog _printDialog = new PrintDialog();
 
 		private void newMenuClick(object sender, RoutedEventArgs e)
 		{
@@ -363,6 +364,14 @@ namespace IDME.WpfEditor
 				{
 					bitmapEncoder.Save(outputStream);
 				}
+			}
+		}
+
+		private void printClick(object sender, RoutedEventArgs e)
+		{
+			if (_printDialog.ShowDialog() == true)
+			{
+				_printDialog.PrintVisual(_viewScreen, $"Innovator data model \"{_project.FileName}\"");
 			}
 		}
 
