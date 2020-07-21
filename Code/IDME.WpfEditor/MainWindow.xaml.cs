@@ -59,6 +59,7 @@ namespace IDME.WpfEditor
 				_project.Changed -= projectChanged;
 			}
 			_project = project;
+			selectItemControl(null);
 			if (_project != null)
 			{
 				_project.Changed += projectChanged;
@@ -194,6 +195,10 @@ namespace IDME.WpfEditor
 				}
 				_outgoingRelationships.Remove(itemControl.Item);
 
+				if (_selectedItemControl == itemControl)
+				{
+					selectItemControl(null);
+				}
 				_allItemControls.Remove(itemControl.Item);
 			}
 		}
@@ -329,6 +334,8 @@ namespace IDME.WpfEditor
 		{
 			if (_exportImageDialog.ShowDialog() == true)
 			{
+				selectItemControl(null);
+
 				const double dpi = 96;
 				var pixelFormat = PixelFormats.Pbgra32;
 
@@ -371,6 +378,7 @@ namespace IDME.WpfEditor
 		{
 			if (_printDialog.ShowDialog() == true)
 			{
+				selectItemControl(null);
 				_printDialog.PrintVisual(_viewScreen, $"Innovator data model \"{_project.FileName}\"");
 			}
 		}
@@ -379,14 +387,29 @@ namespace IDME.WpfEditor
 
 		#region Canvas context menu
 
+		private ItemControl _selectedItemControl;
 		private Point _lastMousePosition;
 
 		private void canvasMouseDown(object sender, MouseButtonEventArgs e)
 		{
-			if (e.ChangedButton == MouseButton.Right && !(e.Source is ItemControl))
+			selectItemControl(e.Source as ItemControl);
+			if (e.ChangedButton == MouseButton.Right && _selectedItemControl == null)
 			{
 				_viewScreenPopup.IsOpen = true;
 				_lastMousePosition = e.GetPosition(dockPanelContainer);
+			}
+		}
+
+		private void selectItemControl(ItemControl control)
+		{
+			if (_selectedItemControl != null)
+			{
+				_selectedItemControl.Background = SystemColors.ControlBrush;
+			}
+			_selectedItemControl = control;
+			if (_selectedItemControl != null)
+			{
+				_selectedItemControl.Background = SystemColors.HighlightBrush;
 			}
 		}
 
@@ -402,7 +425,8 @@ namespace IDME.WpfEditor
 			{
 				var newItem = new Item(itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y);
 				_project.Items.Add(newItem);
-				displayItem(newItem);
+				var newControl = displayItem(newItem);
+				selectItemControl(newControl);
 			}
 		}
 
