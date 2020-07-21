@@ -17,6 +17,8 @@ using IDME.WpfEditor.ViewModels;
 
 using Microsoft.Win32;
 
+using Newtonsoft.Json;
+
 namespace IDME.WpfEditor
 {
 	public partial class MainWindow
@@ -81,6 +83,8 @@ namespace IDME.WpfEditor
 			}
 
 			updateWindowTitle();
+			updateCutCopyButtons();
+			updatePasteButton();
 		}
 
 		private void updateWindowTitle()
@@ -200,6 +204,7 @@ namespace IDME.WpfEditor
 					selectItemControl(null);
 				}
 				_allItemControls.Remove(itemControl.Item);
+				updateCutCopyButtons();
 			}
 		}
 
@@ -322,6 +327,21 @@ namespace IDME.WpfEditor
 			}
 		}
 
+		private void copyClick(object sender, RoutedEventArgs e)
+		{
+			copy();
+		}
+
+		private void cutClick(object sender, RoutedEventArgs e)
+		{
+			cut();
+		}
+
+		private void pasteClick(object sender, RoutedEventArgs e)
+		{
+			paste();
+		}
+
 		private void itemTypesClick(object sender, RoutedEventArgs e)
 		{
 			new ItemTypesDialog
@@ -393,9 +413,12 @@ namespace IDME.WpfEditor
 		private void canvasMouseDown(object sender, MouseButtonEventArgs e)
 		{
 			selectItemControl(e.Source as ItemControl);
-			if (e.ChangedButton == MouseButton.Right && _selectedItemControl == null)
+			if (_selectedItemControl == null)
 			{
-				_viewScreenPopup.IsOpen = true;
+				if (e.ChangedButton == MouseButton.Right)
+				{
+					_viewScreenPopup.IsOpen = true;
+				}
 				_lastMousePosition = e.GetPosition(dockPanelContainer);
 			}
 		}
@@ -411,6 +434,8 @@ namespace IDME.WpfEditor
 			{
 				_selectedItemControl.Background = SystemColors.HighlightBrush;
 			}
+
+			updateCutCopyButtons();
 		}
 
 		private void addItemMenuClick(object sender, RoutedEventArgs e)
@@ -441,6 +466,94 @@ namespace IDME.WpfEditor
 				itemControl.OnDeleteRequest -= itemControlDeleteRequest;
 			}
 			_viewScreen.Children.Clear();
+		}
+
+		#endregion
+
+		#region Copy&Paste
+
+		private void updateCutCopyButtons()
+		{
+			_buttonCopy.IsEnabled = _buttonCut.IsEnabled = _selectedItemControl != null;
+		}
+
+		private void updatePasteButton()
+		{
+			_buttonPaste.IsEnabled = Clipboard.ContainsData(DataFormats.StringFormat);
+		}
+
+		private void canvasKeyDown(object sender, KeyEventArgs e)
+		{
+			if (Keyboard.Modifiers == ModifierKeys.Control)
+			{
+				switch (e.Key)
+				{
+					case Key.C:
+						if (_buttonCopy.IsEnabled)
+						{
+							copy();
+						}
+						break;
+					case Key.X:
+						if (_buttonCut.IsEnabled)
+						{
+							cut();
+						}
+						break;
+					case Key.V:
+						if (_buttonPaste.IsEnabled)
+						{
+							paste();
+						}
+						break;
+				}
+			}
+		}
+
+		private void copy()
+		{
+			Clipboard.SetData(DataFormats.StringFormat, serializeToClipboard(_selectedItemControl.Item));
+			updatePasteButton();
+		}
+
+		private void cut()
+		{
+			Clipboard.SetData(DataFormats.StringFormat, serializeToClipboard(_selectedItemControl.Item));
+			itemControlDeleteRequest(_selectedItemControl, EventArgs.Empty);
+			updatePasteButton();
+		}
+
+		private void paste()
+		{
+			string serializedItem = (string) Clipboard.GetData(DataFormats.StringFormat);
+			var dictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(serializedItem);
+			string itemType = null;
+			var properties = new List<PropertyValue>();
+			foreach (var value in dictionary)
+			{
+				if (value.Key == "__type__")
+				{
+					itemType = value.Value;
+				}
+				else
+				{
+					properties.Add(new PropertyValue(value.Key, value.Value));
+				}
+			}
+			var newItem = new Item(_project.ItemTypes.First(type => type.Name == itemType), _lastMousePosition.X, _lastMousePosition.Y, properties);
+			_project.Items.Add(newItem);
+			displayItem(newItem);
+			updateCutCopyButtons();
+		}
+
+		private static string serializeToClipboard(Item item)
+		{
+			var dictionary = new Dictionary<string, string> { { "__type__", item.ItemType.Name } };
+			foreach (var property in item.Properties)
+			{
+				dictionary[property.Name] = property.Value;
+			}
+			return JsonConvert.SerializeObject(dictionary);
 		}
 
 		#endregion
