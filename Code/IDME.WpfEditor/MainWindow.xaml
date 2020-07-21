@@ -20,6 +20,9 @@
 			<Button ToolTip="Item Types" Margin="5" Click="itemTypesClick">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/ItemType.png" />
 			</Button>
+			<Button ToolTip="Export to image" Margin="5" Click="exportImageClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/Bitmap.png" />
+			</Button>
 		</StackPanel>
 		<Canvas x:Name="_viewScreen" />
 		<Popup IsOpen="False" PlacementTarget="{Binding ElementName=_viewScreen}" Placement="MousePoint" Name="_viewScreenPopup" PopupAnimation="Fade" StaysOpen="False">

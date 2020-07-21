@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 using IDME.WpfEditor.Controls;
 using IDME.WpfEditor.Dialogs;
+using IDME.WpfEditor.Helpers;
 using IDME.WpfEditor.ViewModels;
 
 using Microsoft.Win32;
@@ -246,6 +249,13 @@ namespace IDME.WpfEditor
 			RestoreDirectory = true,
 			Title = "Save file...",
 		};
+		private readonly SaveFileDialog _exportImageDialog = new SaveFileDialog
+		{
+			DefaultExt = $"{BitmapEncodingHelper.DefaultExt}",
+			Filter = BitmapEncodingHelper.GetDialogFilter(),
+			RestoreDirectory = true,
+			Title = "Export image...",
+		};
 
 		private void newMenuClick(object sender, RoutedEventArgs e)
 		{
@@ -312,6 +322,48 @@ namespace IDME.WpfEditor
 			{
 				ItemTypes = _project.ItemTypes
 			}.ShowDialog();
+		}
+
+		private void exportImageClick(object sender, RoutedEventArgs e)
+		{
+			if (_exportImageDialog.ShowDialog() == true)
+			{
+				const double dpi = 96;
+				var pixelFormat = PixelFormats.Pbgra32;
+
+				double width = 0, height = 0;
+				foreach (var itemControl in _allItemControls.Values)
+				{
+					width = Math.Max(width, itemControl.Item.Left + itemControl.ActualWidth);
+					height = Math.Max(height, itemControl.Item.Top + itemControl.ActualHeight);
+				}
+
+				RenderTargetBitmap resultBitmap;
+				if (width > 0 && height > 0)
+				{
+					var drawingVisual = new DrawingVisual();
+					using (var drawingContext = drawingVisual.RenderOpen())
+					{
+						var bounds = new Rect(new Point(), new Size(width, height));
+						drawingContext.DrawRectangle(Brushes.White, null, bounds);
+						drawingContext.DrawRectangle(new VisualBrush(_viewScreen), null, bounds);
+					}
+					resultBitmap = new RenderTargetBitmap((int) width, (int) height, dpi, dpi, pixelFormat);
+					resultBitmap.Render(drawingVisual);
+				}
+				else
+				{
+					resultBitmap = new RenderTargetBitmap(0, 0, dpi, dpi, pixelFormat);
+				}
+
+				var bitmapEncoder = BitmapEncodingHelper.CreateEncoder(System.IO.Path.GetExtension(_exportImageDialog.FileName));
+				bitmapEncoder.Frames.Add(BitmapFrame.Create(resultBitmap));
+
+				using (var outputStream = File.Create(_exportImageDialog.FileName))
+				{
+					bitmapEncoder.Save(outputStream);
+				}
+			}
 		}
 
 		#endregion

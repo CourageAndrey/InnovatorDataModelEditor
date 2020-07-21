@@ -68,6 +68,7 @@
     <Compile Include="Dialogs\SelectItemTypeDialog.xaml.cs">
       <DependentUpon>SelectItemTypeDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\BitmapEncodingHelper.cs" />
     <Compile Include="Helpers\EventCollection.cs" />
     <Compile Include="ViewModels\Property.cs" />
     <Compile Include="ViewModels\PropertyValue.cs" />
@@ -147,6 +148,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\ItemType.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Bitmap.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
