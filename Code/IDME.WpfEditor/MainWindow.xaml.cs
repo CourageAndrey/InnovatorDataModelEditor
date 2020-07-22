@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -412,6 +413,10 @@ namespace IDME.WpfEditor
 
 		private void canvasMouseDown(object sender, MouseButtonEventArgs e)
 		{
+			if (_selectedItemControl != null)
+			{
+				Keyboard.ClearFocus();
+			}
 			selectItemControl(e.Source as ItemControl);
 			if (_selectedItemControl == null)
 			{
@@ -484,33 +489,38 @@ namespace IDME.WpfEditor
 
 		private void canvasKeyDown(object sender, KeyEventArgs e)
 		{
-			if (Keyboard.Modifiers == ModifierKeys.Control)
+			if (!(e.OriginalSource is TextBoxBase))
 			{
-				switch (e.Key)
+				if (Keyboard.Modifiers == ModifierKeys.Control)
 				{
-					case Key.C:
-						if (_buttonCopy.IsEnabled)
-						{
-							copy();
-						}
-						break;
-					case Key.X:
-						if (_buttonCut.IsEnabled)
-						{
-							cut();
-						}
-						break;
-					case Key.V:
-						if (_buttonPaste.IsEnabled)
-						{
-							paste();
-						}
-						break;
+					switch (e.Key)
+					{
+						case Key.C:
+							if (_buttonCopy.IsEnabled)
+							{
+								copy();
+							}
+							break;
+						case Key.X:
+							if (_buttonCut.IsEnabled)
+							{
+								cut();
+							}
+							break;
+						case Key.V:
+							if (_buttonPaste.IsEnabled)
+							{
+								paste();
+							}
+							break;
+					}
 				}
-			}
-			else if (e.Key == Key.Delete && _selectedItemControl != null)
-			{
-				itemControlDeleteRequest(_selectedItemControl, EventArgs.Empty);
+				else if (e.Key == Key.Delete && _selectedItemControl != null)
+				{
+					itemControlDeleteRequest(_selectedItemControl, EventArgs.Empty);
+				}
+
+				e.Handled = true;
 			}
 		}
 
