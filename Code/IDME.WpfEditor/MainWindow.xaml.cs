@@ -128,6 +128,9 @@ namespace IDME.WpfEditor
 			updateWindowTitle();
 			updateCutCopyButtons();
 			updatePasteButton();
+
+			_editHistory.Clear();
+			updateUndoRedoButtons();
 		}
 
 		private void updateWindowTitle()
@@ -222,8 +225,7 @@ namespace IDME.WpfEditor
 			var itemControl = sender as ItemControl;
 			if (itemControl != null)
 			{
-				var command = new DeleteItemCommand(_project, itemControl.Item);
-				command.Apply();
+				performCommand(new DeleteItemCommand(_project, itemControl.Item));
 			}
 		}
 
@@ -234,8 +236,8 @@ namespace IDME.WpfEditor
 				? bottomControls.Max(itemControl => itemControl.Item.Top + itemControl.ActualHeight)
 				: sender.Item.Top + sender.ActualHeight;
 
-			var command = new AddRelationshipCommand(_project, sender.Item, itemType, sender.Item.Left + sender.ActualWidth*2/3, mostBottom + 15);
-			command.Apply();
+			var command = new AddRelationshipCommand(_project, sender.Item, itemType, sender.Item.Left + sender.ActualWidth * 2 / 3, mostBottom + 15);
+			performCommand(command);
 
 			var relationshipControl = _allItemControls[command.NewRelationship];
 			displayRelationship(sender, relationshipControl);
@@ -340,6 +342,16 @@ namespace IDME.WpfEditor
 			{
 				return false;
 			}
+		}
+
+		private void undoMenuClick(object sender, RoutedEventArgs e)
+		{
+			undo();
+		}
+
+		private void redoMenuClick(object sender, RoutedEventArgs e)
+		{
+			redo();
 		}
 
 		private void copyClick(object sender, RoutedEventArgs e)
@@ -467,8 +479,7 @@ namespace IDME.WpfEditor
 			};
 			if (itemTypesDialog.ShowDialog() == true)
 			{
-				var command = new AddItemCommand(_project, itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y);
-				command.Apply();
+				performCommand(new AddItemCommand(_project, itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y));
 			}
 		}
 
@@ -525,6 +536,18 @@ namespace IDME.WpfEditor
 								paste();
 							}
 							break;
+						case Key.Z:
+							if (_buttonUndo.IsEnabled)
+							{
+								undo();
+							}
+							break;
+						case Key.Y:
+							if (_buttonRedo.IsEnabled)
+							{
+								redo();
+							}
+							break;
 					}
 				}
 				else if (e.Key == Key.Delete && _selectedItemControl != null)
@@ -572,6 +595,20 @@ namespace IDME.WpfEditor
 			updateCutCopyButtons();
 		}
 
+		private void undo()
+		{
+			_editHistory[_currentEditPointer].Rollback();
+			_currentEditPointer--;
+			updateUndoRedoButtons();
+		}
+
+		private void redo()
+		{
+			_currentEditPointer++;
+			_editHistory[_currentEditPointer].Apply();
+			updateUndoRedoButtons();
+		}
+
 		private static string serializeToClipboard(Item item)
 		{
 			var dictionary = new Dictionary<string, string> { { "__type__", item.ItemType.Name } };
@@ -580,6 +617,30 @@ namespace IDME.WpfEditor
 				dictionary[property.Name] = property.Value;
 			}
 			return JsonConvert.SerializeObject(dictionary);
+		}
+
+		#endregion
+
+		#region Edit commands
+
+		private readonly List<IEditCommand> _editHistory = new List<IEditCommand>();
+		private int _currentEditPointer = -1;
+
+		private void updateUndoRedoButtons()
+		{
+			_buttonUndo.IsEnabled = _editHistory.Count > 0 && _currentEditPointer >= 0;
+			_buttonRedo.IsEnabled = _editHistory.Count > 0 && _currentEditPointer < _editHistory.Count - 1;
+		}
+
+		private void performCommand(IEditCommand command)
+		{
+			command.Apply();
+
+			_editHistory.RemoveRange(_currentEditPointer + 1, _editHistory.Count - _currentEditPointer - 1);
+
+			_currentEditPointer = _editHistory.Count;
+			_editHistory.Add(command);
+			updateUndoRedoButtons();
 		}
 
 		#endregion

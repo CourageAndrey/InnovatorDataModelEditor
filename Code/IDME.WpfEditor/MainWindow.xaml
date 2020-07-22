@@ -17,6 +17,12 @@
 			<Button ToolTip="Save As" Margin="5" Click="saveAsMenuClick">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/SaveAs.png" />
 			</Button>
+			<Button ToolTip="Undo" Margin="5" Name="_buttonUndo" Click="undoMenuClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/Undo.png" />
+			</Button>
+			<Button ToolTip="Redo" Margin="5" Name="_buttonRedo" Click="redoMenuClick">
+				<Image Width="24" Height="24" Margin="5" Source="Resources/Redo.png" />
+			</Button>
 			<Button ToolTip="Copy" Margin="5" Name="_buttonCopy" Click="copyClick">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/Copy.png" />
 			</Button>

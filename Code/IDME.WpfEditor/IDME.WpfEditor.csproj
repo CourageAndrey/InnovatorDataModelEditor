@@ -170,5 +170,9 @@
     <Resource Include="Resources\Cut.png" />
     <Resource Include="Resources\Paste.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Redo.png" />
+    <Resource Include="Resources\Undo.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
