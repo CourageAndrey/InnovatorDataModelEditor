@@ -508,6 +508,10 @@ namespace IDME.WpfEditor
 						break;
 				}
 			}
+			else if (e.Key == Key.Delete && _selectedItemControl != null)
+			{
+				itemControlDeleteRequest(_selectedItemControl, EventArgs.Empty);
+			}
 		}
 
 		private void copy()
