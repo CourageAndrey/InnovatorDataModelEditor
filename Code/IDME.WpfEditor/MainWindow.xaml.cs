@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+using IDME.WpfEditor.Commands;
 using IDME.WpfEditor.Controls;
 using IDME.WpfEditor.Dialogs;
 using IDME.WpfEditor.Helpers;
@@ -221,7 +222,8 @@ namespace IDME.WpfEditor
 			var itemControl = sender as ItemControl;
 			if (itemControl != null)
 			{
-				_project.Items.Remove(itemControl.Item);
+				var command = new DeleteItemCommand(_project, itemControl.Item);
+				command.Apply();
 			}
 		}
 
@@ -232,14 +234,10 @@ namespace IDME.WpfEditor
 				? bottomControls.Max(itemControl => itemControl.Item.Top + itemControl.ActualHeight)
 				: sender.Item.Top + sender.ActualHeight;
 
-			var newItem = new Item(
-				itemType,
-				sender.Item.Left + sender.ActualWidth*2/3,
-				mostBottom + 15);
-			sender.Item.Relationships.Add(newItem);
+			var command = new AddRelationshipCommand(_project, sender.Item, itemType, sender.Item.Left + sender.ActualWidth*2/3, mostBottom + 15);
+			command.Apply();
 
-			_project.Items.Add(newItem);
-			var relationshipControl = displayItem(newItem);
+			var relationshipControl = _allItemControls[command.NewRelationship];
 			displayRelationship(sender, relationshipControl);
 		}
 
@@ -469,8 +467,8 @@ namespace IDME.WpfEditor
 			};
 			if (itemTypesDialog.ShowDialog() == true)
 			{
-				var newItem = new Item(itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y);
-				_project.Items.Add(newItem);
+				var command = new AddItemCommand(_project, itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y);
+				command.Apply();
 			}
 		}
 

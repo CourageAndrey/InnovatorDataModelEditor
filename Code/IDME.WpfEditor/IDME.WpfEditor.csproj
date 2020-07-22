@@ -65,12 +65,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Commands\AddItemCommand.cs" />
+    <Compile Include="Commands\AddRelationshipCommand.cs" />
+    <Compile Include="Commands\DeleteItemCommand.cs" />
+    <Compile Include="Commands\EditItemPropertyCommand.cs" />
+    <Compile Include="Commands\MoveItemCommand.cs" />
     <Compile Include="Dialogs\ItemTypesDialog.xaml.cs">
       <DependentUpon>ItemTypesDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\SelectItemTypeDialog.xaml.cs">
       <DependentUpon>SelectItemTypeDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="IEditCommand.cs" />
     <Compile Include="Helpers\BitmapEncodingHelper.cs" />
     <Compile Include="Helpers\EventCollection.cs" />
     <Compile Include="ViewModels\Property.cs" />
