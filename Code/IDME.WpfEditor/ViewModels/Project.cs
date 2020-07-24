@@ -22,6 +22,8 @@ namespace IDME.WpfEditor.ViewModels
 		{ get; private set; }
 
 		public event EventHandler Changed;
+		public event EventHandler<Item> ItemAdded;
+		public event EventHandler<Item> ItemRemoved;
 
 		private void raiseChanged()
 		{
@@ -31,6 +33,24 @@ namespace IDME.WpfEditor.ViewModels
 			if (handler != null)
 			{
 				handler(this, EventArgs.Empty);
+			}
+		}
+
+		private void raiseAdded(Item item)
+		{
+			var handler = Volatile.Read(ref ItemAdded);
+			if (handler != null)
+			{
+				handler(this, item);
+			}
+		}
+
+		private void raiseRemoved(Item item)
+		{
+			var handler = Volatile.Read(ref ItemRemoved);
+			if (handler != null)
+			{
+				handler(this, item);
 			}
 		}
 
@@ -52,11 +72,13 @@ namespace IDME.WpfEditor.ViewModels
 			var eventCollection = new Helpers.EventCollection<Item>();
 			eventCollection.ItemAdded += (collection, item) =>
 			{
+				raiseAdded(item);
 				raiseChanged();
 				item.Changed += onItemOnChanged;
 			};
 			eventCollection.ItemRemoved += (collection, item) =>
 			{
+				raiseRemoved(item);
 				raiseChanged();
 				item.Changed -= onItemOnChanged;
 			};

@@ -55,17 +55,58 @@ namespace IDME.WpfEditor
 			updateWindowTitle();
 		}
 
+		private void itemAdded(object sender, Item e)
+		{
+			var newControl = displayItem(e);
+			selectItemControl(newControl);
+		}
+
+		private void itemRemoved(object sender, Item e)
+		{
+			var itemControl = _allItemControls[e];
+
+			itemControl.OnDeleteRequest -= itemControlDeleteRequest;
+			itemControl.OnAddRelationshipRequest -= itemControlAddRelationshipRequest;
+
+			_viewScreen.Children.Remove(itemControl);
+
+			itemControl.Item.Changed -= onItemOnChanged;
+
+			foreach (var relationship in _incomingRelationships[itemControl.Item])
+			{
+				_viewScreen.Children.Remove(relationship.Connector);
+			}
+			_incomingRelationships.Remove(itemControl.Item);
+
+			foreach (var relationship in _outgoingRelationships[itemControl.Item])
+			{
+				_viewScreen.Children.Remove(relationship.Connector);
+			}
+			_outgoingRelationships.Remove(itemControl.Item);
+
+			if (_selectedItemControl == itemControl)
+			{
+				selectItemControl(null);
+			}
+			_allItemControls.Remove(itemControl.Item);
+			updateCutCopyButtons();
+		}
+
 		private void setModel(Project project)
 		{
 			if (_project != null)
 			{
 				_project.Changed -= projectChanged;
+				_project.ItemAdded -= itemAdded;
+				_project.ItemRemoved -= itemRemoved;
 			}
 			_project = project;
 			selectItemControl(null);
 			if (_project != null)
 			{
 				_project.Changed += projectChanged;
+				_project.ItemAdded += itemAdded;
+				_project.ItemRemoved += itemRemoved;
 			}
 
 			_viewScreen.Children.Clear();
@@ -180,32 +221,7 @@ namespace IDME.WpfEditor
 			var itemControl = sender as ItemControl;
 			if (itemControl != null)
 			{
-				itemControl.OnDeleteRequest -= itemControlDeleteRequest;
-				itemControl.OnAddRelationshipRequest -= itemControlAddRelationshipRequest;
-
-				_viewScreen.Children.Remove(itemControl);
 				_project.Items.Remove(itemControl.Item);
-
-				itemControl.Item.Changed -= onItemOnChanged;
-
-				foreach (var relationship in _incomingRelationships[itemControl.Item])
-				{
-					_viewScreen.Children.Remove(relationship.Connector);
-				}
-				_incomingRelationships.Remove(itemControl.Item);
-
-				foreach (var relationship in _outgoingRelationships[itemControl.Item])
-				{
-					_viewScreen.Children.Remove(relationship.Connector);
-				}
-				_outgoingRelationships.Remove(itemControl.Item);
-
-				if (_selectedItemControl == itemControl)
-				{
-					selectItemControl(null);
-				}
-				_allItemControls.Remove(itemControl.Item);
-				updateCutCopyButtons();
 			}
 		}
 
@@ -455,8 +471,6 @@ namespace IDME.WpfEditor
 			{
 				var newItem = new Item(itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y);
 				_project.Items.Add(newItem);
-				var newControl = displayItem(newItem);
-				selectItemControl(newControl);
 			}
 		}
 
