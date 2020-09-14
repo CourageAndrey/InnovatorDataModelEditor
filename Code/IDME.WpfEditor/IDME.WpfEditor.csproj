@@ -70,8 +70,14 @@
     <Compile Include="Commands\DeleteItemCommand.cs" />
     <Compile Include="Commands\EditItemPropertyCommand.cs" />
     <Compile Include="Commands\MoveItemCommand.cs" />
+    <Compile Include="Dialogs\ConnectToInnovatorDialog.xaml.cs">
+      <DependentUpon>ConnectToInnovatorDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dialogs\ItemTypesDialog.xaml.cs">
       <DependentUpon>ItemTypesDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SelectItemsDialog.xaml.cs">
+      <DependentUpon>SelectItemsDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dialogs\SelectItemTypeDialog.xaml.cs">
       <DependentUpon>SelectItemTypeDialog.xaml</DependentUpon>
@@ -96,7 +102,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\ConnectToInnovatorDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Dialogs\ItemTypesDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\SelectItemsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -185,6 +199,9 @@
     <Resource Include="Resources\AML Export.png" />
     <Resource Include="Resources\AML Import.png" />
     <Resource Include="Resources\AML ItemTypes Import.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Aras Innovator.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

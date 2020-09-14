@@ -1,0 +1,12 @@
+﻿<Window x:Class="IDME.WpfEditor.Dialogs.SelectItemsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Select items" Height="450" Width="800">
+	<DockPanel LastChildFill="True">
+		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+			<Button Margin="5" Padding="5,2,5,2" Content="OK" Click="okClick" />
+			<Button Margin="5" Padding="5,2,5,2" Content="Cancel" Click="cancelClick" />
+		</StackPanel>
+		<DataGrid AutoGenerateColumns="False" Name="dataGrid" />
+	</DockPanel>
+</Window>

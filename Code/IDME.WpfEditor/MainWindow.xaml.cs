@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -430,6 +431,7 @@ namespace IDME.WpfEditor
 
 			var itemTypesDialog = new SelectItemTypeDialog
 			{
+				Owner = this,
 				ItemTypes = _project.ItemTypes,
 			};
 			if (itemTypesDialog.ShowDialog() == true)
@@ -564,20 +566,220 @@ namespace IDME.WpfEditor
 
 		#region Interaction with Innovator
 
+		private void connectInnovatorClick(object sender, RoutedEventArgs e)
+		{
+			tryToConnectInnovator();
+		}
+
 		private void downloadItemsClick(object sender, RoutedEventArgs e)
 		{
-			throw new NotImplementedException();
+			var innovator = getInnovator();
+			if (innovator != null)
+			{
+				var selectItemTypeDialog = new SelectItemTypeDialog
+				{
+					Owner = this,
+					ItemTypes = _project.ItemTypes,
+				};
+				if (selectItemTypeDialog.ShowDialog() == true)
+				{
+					var itemType = selectItemTypeDialog.SelectedItemType;
+
+					var itemsRequest = innovator.newItem(itemType.Name, "get");
+					itemsRequest.setAttribute("select", "*");
+					var itemsItem = itemsRequest.apply();
+
+					var items = new List<Aras.IOM.Item>();
+					for (int i = 0, count = itemsItem.getItemCount(); i < count; i++)
+					{
+						items.Add(itemsItem.getItemByIndex(i));
+					}
+
+					var selectDialog = new SelectItemsDialog
+					{
+						Owner = this,
+						Properties = itemType.Properties.Select(property => property.Name).ToList(),
+						Items = items,
+					};
+					if (selectDialog.ShowDialog() == true)
+					{
+						double x = _project.Items.Max(item => item.Left + _allItemControls[item].ActualWidth);
+						double y = _project.Items.Max(item => item.Top + _allItemControls[item].ActualHeight);
+
+						const int xOffset = 100;
+						const int yOffset = 50;
+
+						foreach (var item in selectDialog.SelectedItems)
+						{
+							x += xOffset;
+							y += yOffset;
+							var newItem = new Item(itemType, x, y);
+							foreach (var property in newItem.Properties)
+							{
+								property.Value = item.getProperty(property.Name);
+							}
+							_project.Items.Add(newItem);
+						}
+					}
+				}
+			}
 		}
 
 		private void uploadItemsClick(object sender, RoutedEventArgs e)
 		{
-			throw new NotImplementedException();
+			var innovator = getInnovator();
+			if (innovator != null)
+			{
+				var aml = new StringBuilder("<AML>");
+				foreach (var projectItem in _project.Items)
+				{
+					var innovatorItem = innovator.newItem(projectItem.ItemType.Name, "add");
+					foreach (var value in projectItem.Properties)
+					{
+						innovatorItem.setProperty(value.Name, value.Value);
+					}
+					aml.Append(innovatorItem.node.OuterXml);
+				}
+				aml.Append("</AML>");
+
+				var result = innovator.applyAML(aml.ToString());
+				if (result.isError())
+				{
+					MessageBox.Show(result.getErrorDetail(), "An error occured", MessageBoxButton.OK, MessageBoxImage.Error);
+				}
+				else
+				{
+					MessageBox.Show("Successful!");
+				}
+			}
 		}
 
 		private void downloadItemTypesClick(object sender, RoutedEventArgs e)
 		{
-			throw new NotImplementedException();
+			var innovator = getInnovator();
+			if (innovator != null)
+			{
+				var itemTypesRequest = innovator.newItem("ItemType", "get");
+				itemTypesRequest.setAttribute("select", "name,is_relationship");
+				var propertyRequest = innovator.newItem("Property", "get");
+				propertyRequest.setAttribute("select", "name,label,data_type");
+				propertyRequest.setProperty("is_hidden", "0");
+				itemTypesRequest.addRelationship(propertyRequest);
+
+				var itemTypesItem = itemTypesRequest.apply();
+				var itemTypes = new List<Aras.IOM.Item>();
+				for (int i = 0, count = itemTypesItem.getItemCount(); i < count; i++)
+				{
+					itemTypes.Add(itemTypesItem.getItemByIndex(i));
+				}
+
+				var selectDialog = new SelectItemsDialog
+				{
+					Owner = this,
+					Properties = new List<string> { "name", "is_relationship" },
+					Items = itemTypes,
+				};
+				if (selectDialog.ShowDialog() == true)
+				{
+					var itemTypesCache = _project.ItemTypes.ToDictionary(
+						itemType => itemType.Name,
+						itemType => itemType);
+					var itemTypeProperties = new Dictionary<string, Dictionary<string, string>>();
+
+					foreach (var itemType in selectDialog.SelectedItems)
+					{
+						var properties = new List<Property>();
+						var itemProperties = new Dictionary<string, string>();
+						var propertiesItem = itemType.getRelationships("Property");
+						for (int i = 0, count = propertiesItem.getItemCount(); i < count; i++)
+						{
+							var propertyItem = propertiesItem.getItemByIndex(i);
+							properties.Add(new Property { Name = propertyItem.getProperty("name") });
+						}
+						var newItemType = new ItemType(
+							itemType.getProperty("name"),
+							itemType.getProperty("is_relationship") == "1",
+							properties,
+							new ItemType[0]);
+						_project.ItemTypes.Add(newItemType);
+						itemTypesCache[newItemType.Name] = newItemType;
+						if (itemProperties.Count > 0)
+						{
+							itemTypeProperties[newItemType.Name] = itemProperties;
+						}
+					}
+
+					foreach (var itemType in itemTypeProperties)
+					{
+						foreach (var property in itemType.Value)
+						{
+							ItemType pointingType;
+							if (itemTypesCache.TryGetValue(property.Value, out pointingType))
+							{
+								itemTypesCache[itemType.Key].Properties.First(p => p.Name == property.Key).DataSourceType = pointingType;
+							}
+						}
+						
+					}
+				}
+			}
 		}
+
+		private void tryToConnectInnovator()
+		{
+			if (_innovator == null)
+			{
+				_innovatorServer = DefaultInnovatorServer;
+				_innovatorDatabase = DefaultInnovatorDatabase;
+				_innovatorUserName = DefaultInnovatorUserName;
+				_innovatorPassword = DefaultInnovatorPassword;
+			}
+
+			var connectionDialog = new ConnectToInnovatorDialog
+			{
+				Owner = this,
+				Server = _innovatorServer,
+				Database = _innovatorDatabase,
+				UserName = _innovatorUserName,
+				Password = _innovatorPassword,
+			};
+
+			if (connectionDialog.ShowDialog() == true)
+			{
+				_innovatorServer = connectionDialog.Server;
+				_innovatorDatabase = connectionDialog.Database;
+				_innovatorUserName = connectionDialog.UserName;
+				_innovatorPassword = connectionDialog.Password;
+
+				var serverConnection = Aras.IOM.IomFactory.CreateHttpServerConnection(
+					_innovatorServer,
+					_innovatorDatabase,
+					_innovatorUserName,
+					_innovatorPassword);
+
+				_innovator = new Aras.IOM.Innovator(serverConnection);
+			}
+		}
+
+		private Aras.IOM.Innovator getInnovator()
+		{
+			if (_innovator == null)
+			{
+				tryToConnectInnovator();
+			}
+			return _innovator;
+		}
+
+		const string DefaultInnovatorServer = "http://localhost/KHI_Aerospace-Development-M2/";
+		const string DefaultInnovatorDatabase = "KHI_Aerospace-Development-M2";
+		const string DefaultInnovatorUserName = "admin";
+		const string DefaultInnovatorPassword = "innovator";
+
+		string _innovatorServer;
+		string _innovatorDatabase;
+		string _innovatorUserName;
+		string _innovatorPassword;
+		private Aras.IOM.Innovator _innovator;
 
 		#endregion
 
@@ -585,12 +787,12 @@ namespace IDME.WpfEditor
 
 		private void almImportClick(object sender, RoutedEventArgs e)
 		{
-			if (_openAmlDialog.ShowDialog() == true)
+			var innovator = getInnovator();
+			if (_openAmlDialog.ShowDialog() == true && innovator != null)
 			{
 				var dom = new XmlDocument();
 				dom.Load(_openAmlDialog.FileName);
 
-				var innovator = ConnectToInnovatorServer();
 				var item = innovator.newItem();
 				item.loadAML(dom.OuterXml);
 #warning Need not to fail in case of multiple item within AML.
@@ -619,9 +821,9 @@ namespace IDME.WpfEditor
 
 		private void amlExportClick(object sender, RoutedEventArgs e)
 		{
-			if (_saveAmlDialog.ShowDialog() == true)
+			var innovator = getInnovator();
+			if (_saveAmlDialog.ShowDialog() == true && innovator != null)
 			{
-				var innovator = ConnectToInnovatorServer();
 				Aras.IOM.Item domItem;
 
 				if (_project.Items.Count > 0)
@@ -656,12 +858,12 @@ namespace IDME.WpfEditor
 
 		private void amlItemTypesClick(object sender, RoutedEventArgs e)
 		{
-			if (_openAmlDialog.ShowDialog() == true)
+			var innovator = getInnovator();
+			if (_openAmlDialog.ShowDialog() == true && innovator != null)
 			{
 				var dom = new XmlDocument();
 				dom.Load(_openAmlDialog.FileName);
 
-				var innovator = ConnectToInnovatorServer();
 				var item = innovator.newItem();
 				item.loadAML(dom.OuterXml);
 #warning Need not to fail in case of multiple item within AML.
@@ -711,20 +913,5 @@ namespace IDME.WpfEditor
 		};
 
 		#endregion
-
-		private static Aras.IOM.Innovator ConnectToInnovatorServer()
-		{
-			const string _innovatorServer = "http://localhost/KHI_Aerospace-Development-M2/";
-			const string _innovatorDatabase = "KHI_Aerospace-Development-M2";
-			const string _innovatorUserName = "admin";
-			const string _innovatorPassword = "innovator";
-
-			var serverConnection = Aras.IOM.IomFactory.CreateHttpServerConnection(
-				_innovatorServer,
-				_innovatorDatabase,
-				_innovatorUserName,
-				_innovatorPassword);
-			return new Aras.IOM.Innovator(serverConnection);
-		}
 	}
 }
