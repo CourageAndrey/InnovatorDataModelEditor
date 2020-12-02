@@ -81,6 +81,7 @@
     <Compile Include="Helpers\EventCollection.cs" />
     <Compile Include="ViewModels\Property.cs" />
     <Compile Include="ViewModels\PropertyValue.cs" />
+    <Compile Include="ViewModels\Relationship.cs" />
     <Compile Include="Xml\Relationship.cs" />
     <Compile Include="Xml\Item.cs" />
     <Compile Include="Xml\ItemProperty.cs" />
