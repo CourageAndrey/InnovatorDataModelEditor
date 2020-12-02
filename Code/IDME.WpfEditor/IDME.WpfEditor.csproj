@@ -175,5 +175,15 @@
     <Resource Include="Resources\Redo.png" />
     <Resource Include="Resources\Undo.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Aras ItemTypes.png" />
+    <Resource Include="Resources\Download Items.png" />
+    <Resource Include="Resources\Upload Items.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\AML Export.png" />
+    <Resource Include="Resources\AML Import.png" />
+    <Resource Include="Resources\AML ItemTypes Import.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -612,5 +612,43 @@ namespace IDME.WpfEditor
 		}
 
 		#endregion
+
+		#region Interaction with Innovator
+
+		private void downloadItemsClick(object sender, RoutedEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void uploadItemsClick(object sender, RoutedEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void downloadItemTypesClick(object sender, RoutedEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		#region [de]serialization from/to AML
+
+		private void almImportClick(object sender, RoutedEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void amlExportClick(object sender, RoutedEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
+
+		private void amlItemTypesClick(object sender, RoutedEventArgs e)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
 	}
 }
