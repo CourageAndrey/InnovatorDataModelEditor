@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Xml;
 
 using IDME.WpfEditor.Commands;
 using IDME.WpfEditor.Controls;
@@ -636,19 +637,146 @@ namespace IDME.WpfEditor
 
 		private void almImportClick(object sender, RoutedEventArgs e)
 		{
-			throw new NotImplementedException();
+			if (_openAmlDialog.ShowDialog() == true)
+			{
+				var dom = new XmlDocument();
+				dom.Load(_openAmlDialog.FileName);
+
+				var innovator = ConnectToInnovatorServer();
+				var item = innovator.newItem();
+				item.loadAML(dom.OuterXml);
+#warning Need not to fail in case of multiple item within AML.
+
+				string itemTypeName = item.getType();
+				var itemType = _project.ItemTypes.FirstOrDefault(it => it.Name == itemTypeName);
+				if (itemType != null)
+				{
+					var addItemCommand = new AddItemCommand(_project, itemType, 0, 0);
+					performCommand(addItemCommand);
+					Item importedItem = addItemCommand.NewItem;
+
+					foreach (var property in importedItem.Properties)
+					{
+						property.Value = item.getProperty(property.Name);
+					}
+
+					_allItemControls[importedItem].Item = importedItem; // update after properties are refreshed
+				}
+				else
+				{
+					MessageBox.Show($"There are no \"{itemTypeName}\" type found.", "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Error);
+				}
+			}
 		}
 
 		private void amlExportClick(object sender, RoutedEventArgs e)
 		{
-			throw new NotImplementedException();
+			if (_saveAmlDialog.ShowDialog() == true)
+			{
+				var innovator = ConnectToInnovatorServer();
+				Aras.IOM.Item domItem;
+
+				if (_project.Items.Count > 0)
+				{
+					domItem = innovator.newItem();
+
+					foreach (var projectItem in _project.Items)
+					{
+						var iomItem = innovator.newItem(projectItem.ItemType.Name, "add");
+						iomItem.removeAttribute("id");
+						iomItem.removeAttribute("isTemp");
+						iomItem.removeAttribute("isNew");
+
+						foreach (var itemProperty in projectItem.Properties)
+						{
+							iomItem.setProperty(itemProperty.Name, itemProperty.Value);
+						}
+
+						domItem.appendItem(iomItem);
+					}
+
+					domItem.removeItem(domItem.getItemByIndex(0));
+				}
+				else
+				{
+					domItem = innovator.newResult(string.Empty);
+				}
+
+				domItem.dom.Save(_saveAmlDialog.FileName);
+			}
 		}
 
 		private void amlItemTypesClick(object sender, RoutedEventArgs e)
 		{
-			throw new NotImplementedException();
+			if (_openAmlDialog.ShowDialog() == true)
+			{
+				var dom = new XmlDocument();
+				dom.Load(_openAmlDialog.FileName);
+
+				var innovator = ConnectToInnovatorServer();
+				var item = innovator.newItem();
+				item.loadAML(dom.OuterXml);
+#warning Need not to fail in case of multiple item within AML.
+
+				if (item.getType() == "ItemType")
+				{
+					string itemTypeName = item.getProperty("name");
+					if (_project.ItemTypes.Any(it => it.Name == itemTypeName))
+					{
+						MessageBox.Show($"Itemtype \"{itemTypeName}\" is already defined.", "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Error);
+					}
+					else
+					{
+						var properties = item.getRelationships("Property").Enumerate();
+						var relationships = item.getRelationships("RelationshipType").Enumerate().Select(r => r.getPropertyAttribute("relationship_id", "keyed_name")).ToList();
+
+						var itemType = new ItemType(
+							itemTypeName,
+							item.getProperty("is_relationship") == "1",
+#warning Need to detect item-type properties!
+							properties.Select(propertyItem => new Property { Name = propertyItem.getProperty("name") }),
+							_project.ItemTypes.Where(it => it.IsRelationship && relationships.Contains(it.Name)));
+
+						_project.ItemTypes.Add(itemType);
+					}
+				}
+				else
+				{
+					MessageBox.Show("Only items with type \"ItemType\" can be imported.", "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Warning);
+				}
+			}
 		}
 
+		private readonly OpenFileDialog _openAmlDialog = new OpenFileDialog
+		{
+			DefaultExt = ".xml",
+			Filter = "AML file|*.xml",
+			RestoreDirectory = true,
+			Title = "Open Import file...",
+		};
+		private readonly SaveFileDialog _saveAmlDialog = new SaveFileDialog
+		{
+			DefaultExt = ".xml",
+			Filter = "AML file|*.xml",
+			RestoreDirectory = true,
+			Title = "Save Import file...",
+		};
+
 		#endregion
+
+		private static Aras.IOM.Innovator ConnectToInnovatorServer()
+		{
+			const string _innovatorServer = "http://localhost/KHI_Aerospace-Development-M2/";
+			const string _innovatorDatabase = "KHI_Aerospace-Development-M2";
+			const string _innovatorUserName = "admin";
+			const string _innovatorPassword = "innovator";
+
+			var serverConnection = Aras.IOM.IomFactory.CreateHttpServerConnection(
+				_innovatorServer,
+				_innovatorDatabase,
+				_innovatorUserName,
+				_innovatorPassword);
+			return new Aras.IOM.Innovator(serverConnection);
+		}
 	}
 }

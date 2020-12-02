@@ -76,6 +76,7 @@
     <Compile Include="Dialogs\SelectItemTypeDialog.xaml.cs">
       <DependentUpon>SelectItemTypeDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\InnovatorHelper.cs" />
     <Compile Include="IEditCommand.cs" />
     <Compile Include="Helpers\BitmapEncodingHelper.cs" />
     <Compile Include="Helpers\EventCollection.cs" />
