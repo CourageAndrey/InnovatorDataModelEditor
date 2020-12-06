@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 
+using IDME.WpfEditor.Commands;
+
 namespace IDME.WpfEditor.ViewModels
 {
 	public class Project : INotifyPropertyChanged
@@ -55,7 +57,28 @@ namespace IDME.WpfEditor.ViewModels
 
 		private void onItemChanged(object sender, PropertyChangedEventArgs e)
 		{
-			raiseChanged();
+			if (_suppressHistoryChanges) return;
+
+			if (e.PropertyName == nameof(Item.Left) || e.PropertyName == nameof(Item.Top))
+			{
+				var moveItemCommand = _currentEditPointer >= 0 ? _editHistory[_currentEditPointer] as MoveItemCommand : null;
+				if (moveItemCommand != null && moveItemCommand.Item == sender)
+				{
+					moveItemCommand.UpdatePosition(moveItemCommand.Item.Left, moveItemCommand.Item.Top);
+					// no need to call raiseChanged(); because non-empty history means that project has already been marked as changed
+				}
+				else
+				{
+					Item item = (Item) sender;
+					moveItemCommand = new MoveItemCommand(this, item, item.Left, item.Top);
+					PerformCommand(moveItemCommand, false);
+					// no need to call raiseChanged(); because PerformCommand does
+				}
+			}
+			else
+			{
+				raiseChanged();
+			}
 		}
 
 		public Project(string fileName, IEnumerable<ItemType> itemTypes, IEnumerable<Item> items)
@@ -164,6 +187,7 @@ namespace IDME.WpfEditor.ViewModels
 
 		private readonly List<IEditCommand> _editHistory = new List<IEditCommand>();
 		private int _currentEditPointer = -1;
+		private bool _suppressHistoryChanges;
 
 		public bool CanUndo
 		{ get { return _editHistory.Count > 0 && _currentEditPointer >= 0; } }
@@ -171,9 +195,12 @@ namespace IDME.WpfEditor.ViewModels
 		public bool CanRedo
 		{ get { return _editHistory.Count > 0 && _currentEditPointer < _editHistory.Count - 1; } }
 
-		public void PerformCommand(IEditCommand command)
+		public void PerformCommand(IEditCommand command, bool performBody = true)
 		{
-			command.Apply();
+			if (performBody)
+			{
+				command.Apply();
+			}
 
 			_editHistory.RemoveRange(_currentEditPointer + 1, _editHistory.Count - _currentEditPointer - 1);
 
@@ -184,16 +211,32 @@ namespace IDME.WpfEditor.ViewModels
 
 		public void Undo()
 		{
-			_editHistory[_currentEditPointer].Rollback();
-			_currentEditPointer--;
-			raiseChanged();
+			_suppressHistoryChanges = true;
+			try
+			{
+				_editHistory[_currentEditPointer].Rollback();
+				_currentEditPointer--;
+				raiseChanged();
+			}
+			finally
+			{
+				_suppressHistoryChanges = false;
+			}
 		}
 
 		public void Redo()
 		{
-			_currentEditPointer++;
-			_editHistory[_currentEditPointer].Apply();
-			raiseChanged();
+			_suppressHistoryChanges = true;
+			try
+			{
+				_currentEditPointer++;
+				_editHistory[_currentEditPointer].Apply();
+				raiseChanged();
+			}
+			finally
+			{
+				_suppressHistoryChanges = false;
+			}
 		}
 
 		#endregion
@@ -207,6 +250,9 @@ namespace IDME.WpfEditor.ViewModels
 
 		public bool CanSave
 		{ get { return !HasChanges; } }
+
+		public bool NeedToMoveItem
+		{ get { return _suppressHistoryChanges; } }
 
 		private void raiseChanged(string propertyName = null)
 		{

@@ -143,15 +143,23 @@ namespace IDME.WpfEditor
 
 		private void onItemChanged(object sender, PropertyChangedEventArgs e)
 		{
+			var item = (Item) sender;
+
 			if (e.PropertyName == nameof(Item.Left) || e.PropertyName == nameof(Item.Top))
 			{
-				foreach (var relationship in _incomingRelationships[(Item)sender])
+				foreach (var relationship in _incomingRelationships[item])
 				{
 					relationship.UpdateConnector();
 				}
-				foreach (var relationship in _outgoingRelationships[(Item)sender])
+				foreach (var relationship in _outgoingRelationships[item])
 				{
 					relationship.UpdateConnector();
+				}
+
+				if (_project.NeedToMoveItem)
+				{
+					Canvas.SetLeft(_allItemControls[item], item.Left);
+					Canvas.SetTop(_allItemControls[item], item.Top);
 				}
 			}
 		}

@@ -2,7 +2,6 @@
 
 namespace IDME.WpfEditor.Commands
 {
-#warning This class is not used, but need!
 	public class MoveItemCommand : BaseEditCommand
 	{
 		public Item Item
@@ -40,6 +39,12 @@ namespace IDME.WpfEditor.Commands
 		{
 			Item.Left = LeftBefore;
 			Item.Top = TopBefore;
+		}
+
+		public void UpdatePosition(double left, double top)
+		{
+			LeftAfter = left;
+			TopAfter = top;
 		}
 	}
 }
