@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 using IDME.WpfEditor.Dialogs;
@@ -45,15 +46,17 @@ namespace IDME.WpfEditor.Controls
 
 					var propertyValueControl = new TextBox
 					{
-						Text = property.Value,
 						Margin = new Thickness(1),
 					};
 					propertyValueControl.SetValue(Grid.RowProperty, rowNumber);
 					propertyValueControl.SetValue(Grid.ColumnProperty, 1);
-					propertyValueControl.TextChanged += (sender, args) =>
+
+					propertyValueControl.DataContext = property;
+					propertyValueControl.SetBinding(TextBox.TextProperty, new Binding("Value")
 					{
-						property.Value = propertyValueControl.Text;
-					};
+						Mode = BindingMode.TwoWay,
+						UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+					});
 
 					_propertiesGrid.Children.Add(propertyValueControl);
 
