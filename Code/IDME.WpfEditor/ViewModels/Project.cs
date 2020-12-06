@@ -53,7 +53,7 @@ namespace IDME.WpfEditor.ViewModels
 
 		#region Constructors
 
-		private void onItemOnChanged(object sender, EventArgs args)
+		private void onItemChanged(object sender, PropertyChangedEventArgs e)
 		{
 			raiseChanged();
 		}
@@ -69,13 +69,13 @@ namespace IDME.WpfEditor.ViewModels
 			{
 				raiseAdded(item);
 				raiseChanged();
-				item.Changed += onItemOnChanged;
+				item.PropertyChanged += onItemChanged;
 			};
 			eventCollection.ItemRemoved += (collection, item) =>
 			{
 				raiseRemoved(item);
 				raiseChanged();
-				item.Changed -= onItemOnChanged;
+				item.PropertyChanged -= onItemChanged;
 			};
 			Items = eventCollection;
 			foreach (var item in items)

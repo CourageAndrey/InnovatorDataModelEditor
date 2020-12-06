@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace IDME.WpfEditor.ViewModels
 {
-	public class Item
+	public class Item : INotifyPropertyChanged
 	{
 		#region Properties
 
@@ -41,17 +42,6 @@ namespace IDME.WpfEditor.ViewModels
 		public ICollection<Item> Relationships
 		{ get; }
 
-		public event EventHandler Changed;
-
-		private void raiseChanged()
-		{
-			var handler = Volatile.Read(ref Changed);
-			if (handler != null)
-			{
-				handler(this, EventArgs.Empty);
-			}
-		}
-
 		#endregion
 
 		#region Constructors
@@ -69,10 +59,22 @@ namespace IDME.WpfEditor.ViewModels
 			Properties = properties.ToList().AsReadOnly();
 			foreach (var property in Properties)
 			{
-				property.ValueChanged += (sender, args) => { raiseChanged(); };
+				property.ValueChanged += (sender, args) => { raiseChanged("Properties"); };
 			}
 
 			Relationships = new List<Item>();
+		}
+
+		#endregion
+
+		#region Implementation of INotifyPropertyChanged
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private void raiseChanged([CallerMemberName] string propertyName = null)
+		{
+			var handler = Volatile.Read(ref PropertyChanged);
+			handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 
 		#endregion

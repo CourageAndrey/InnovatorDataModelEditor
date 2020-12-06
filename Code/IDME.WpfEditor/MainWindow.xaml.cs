@@ -67,7 +67,7 @@ namespace IDME.WpfEditor
 
 			_viewScreen.Children.Remove(itemControl);
 
-			itemControl.Item.Changed -= onItemOnChanged;
+			itemControl.Item.PropertyChanged -= onItemChanged;
 
 			foreach (var relationship in _incomingRelationships[itemControl.Item])
 			{
@@ -136,12 +136,12 @@ namespace IDME.WpfEditor
 			_viewScreen.Children.Add(itemControl);
 			_incomingRelationships[itemControl.Item] = new List<Relationship>();
 			_outgoingRelationships[itemControl.Item] = new List<Relationship>();
-			item.Changed += onItemOnChanged;
+			item.PropertyChanged += onItemChanged;
 			_allItemControls[item] = itemControl;
 			return itemControl;
 		}
 
-		private void onItemOnChanged(object sender, EventArgs args)
+		private void onItemChanged(object sender, PropertyChangedEventArgs e)
 		{
 			foreach (var relationship in _incomingRelationships[(Item) sender])
 			{
