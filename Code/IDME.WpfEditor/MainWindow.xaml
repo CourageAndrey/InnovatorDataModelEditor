@@ -1,7 +1,7 @@
 ﻿<Window x:Class="IDME.WpfEditor.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Innovator Data Model Editor" Height="450" Width="900" Icon="/IDME.WpfEditor;component/Aras icon.ico"
+        Title="{Binding Path=WindowTitle}" Height="450" Width="900" Icon="/IDME.WpfEditor;component/Aras icon.ico"
         Loaded="onWindowLoaded" Closing="onWindowClosing" MouseDown="canvasMouseDown" PreviewKeyDown="canvasKeyDown">
 	<DockPanel LastChildFill="True" Name="dockPanelContainer">
 		<StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
@@ -11,16 +11,16 @@
 			<Button ToolTip="Open model" Margin="5" Click="openMenuClick">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/Open.png" />
 			</Button>
-			<Button ToolTip="Save" Margin="5" Click="saveMenuClick">
+			<Button ToolTip="Save" Margin="5" Click="saveMenuClick" IsEnabled="{Binding Path=CanSave}">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/Save.png" />
 			</Button>
 			<Button ToolTip="Save As" Margin="5" Click="saveAsMenuClick">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/SaveAs.png" />
 			</Button>
-			<Button ToolTip="Undo" Margin="5" Name="_buttonUndo" Click="undoMenuClick">
+			<Button ToolTip="Undo" Margin="5" Name="_buttonUndo" Click="undoMenuClick" IsEnabled="{Binding Path=CanUndo}">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/Undo.png" />
 			</Button>
-			<Button ToolTip="Redo" Margin="5" Name="_buttonRedo" Click="redoMenuClick">
+			<Button ToolTip="Redo" Margin="5" Name="_buttonRedo" Click="redoMenuClick" IsEnabled="{Binding Path=CanRedo}">
 				<Image Width="24" Height="24" Margin="5" Source="Resources/Redo.png" />
 			</Button>
 			<Button ToolTip="Copy" Margin="5" Name="_buttonCopy" Click="copyClick">

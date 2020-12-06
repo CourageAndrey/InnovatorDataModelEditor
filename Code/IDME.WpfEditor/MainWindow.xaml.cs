@@ -52,11 +52,6 @@ namespace IDME.WpfEditor
 
 		private Project _project;
 
-		private void projectChanged(object sender, EventArgs e)
-		{
-			updateWindowTitle();
-		}
-
 		private void itemAdded(object sender, Item e)
 		{
 			var newControl = displayItem(e);
@@ -98,15 +93,13 @@ namespace IDME.WpfEditor
 		{
 			if (_project != null)
 			{
-				_project.Changed -= projectChanged;
 				_project.ItemAdded -= itemAdded;
 				_project.ItemRemoved -= itemRemoved;
 			}
-			_project = project;
+			DataContext = _project = project;
 			selectItemControl(null);
 			if (_project != null)
 			{
-				_project.Changed += projectChanged;
 				_project.ItemAdded += itemAdded;
 				_project.ItemRemoved += itemRemoved;
 			}
@@ -126,18 +119,8 @@ namespace IDME.WpfEditor
 				}
 			}
 
-			updateWindowTitle();
 			updateCutCopyButtons();
 			updatePasteButton();
-
-			_editHistory.Clear();
-			updateUndoRedoButtons();
-		}
-
-		private void updateWindowTitle()
-		{
-			string changesSign = _project.HasChanges ? "*" : string.Empty;
-			Title = $"Innovator Data Model Editor : {_project.FileName}{changesSign}";
 		}
 
 		private ItemControl displayItem(Item item)
@@ -194,7 +177,7 @@ namespace IDME.WpfEditor
 			var itemControl = sender as ItemControl;
 			if (itemControl != null)
 			{
-				performCommand(new DeleteItemCommand(_project, itemControl.Item));
+				_project.PerformCommand(new DeleteItemCommand(_project, itemControl.Item));
 			}
 		}
 
@@ -206,7 +189,7 @@ namespace IDME.WpfEditor
 				: sender.Item.Top + sender.ActualHeight;
 
 			var command = new AddRelationshipCommand(_project, sender.Item, itemType, sender.Item.Left + sender.ActualWidth * 2 / 3, mostBottom + 15);
-			performCommand(command);
+			_project.PerformCommand(command);
 
 			var relationshipControl = _allItemControls[command.NewRelationship];
 			displayRelationship(sender, relationshipControl);
@@ -279,23 +262,16 @@ namespace IDME.WpfEditor
 			if (!string.IsNullOrEmpty(_project.FileName))
 			{
 				_project.Save(_project.FileName);
-				updateWindowTitle();
 			}
 			else
 			{
-				if (saveAs())
-				{
-					updateWindowTitle();
-				}
+				saveAs();
 			}
 		}
 
 		private void saveAsMenuClick(object sender, RoutedEventArgs e)
 		{
-			if (saveAs())
-			{
-				updateWindowTitle();
-			}
+			saveAs();
 		}
 
 		private bool saveAs()
@@ -304,7 +280,6 @@ namespace IDME.WpfEditor
 			if (_saveFileDialog.ShowDialog() == true)
 			{
 				_project.Save(_saveFileDialog.FileName);
-				updateWindowTitle();
 				return true;
 			}
 			else
@@ -315,12 +290,12 @@ namespace IDME.WpfEditor
 
 		private void undoMenuClick(object sender, RoutedEventArgs e)
 		{
-			undo();
+			_project.Undo();
 		}
 
 		private void redoMenuClick(object sender, RoutedEventArgs e)
 		{
-			redo();
+			_project.Redo();
 		}
 
 		private void copyClick(object sender, RoutedEventArgs e)
@@ -448,7 +423,7 @@ namespace IDME.WpfEditor
 			};
 			if (itemTypesDialog.ShowDialog() == true)
 			{
-				performCommand(new AddItemCommand(_project, itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y));
+				_project.PerformCommand(new AddItemCommand(_project, itemTypesDialog.SelectedItemType, _lastMousePosition.X, _lastMousePosition.Y));
 			}
 		}
 
@@ -508,13 +483,13 @@ namespace IDME.WpfEditor
 						case Key.Z:
 							if (_buttonUndo.IsEnabled)
 							{
-								undo();
+								_project.Undo();
 							}
 							break;
 						case Key.Y:
 							if (_buttonRedo.IsEnabled)
 							{
-								redo();
+								_project.Redo();
 							}
 							break;
 					}
@@ -564,20 +539,6 @@ namespace IDME.WpfEditor
 			updateCutCopyButtons();
 		}
 
-		private void undo()
-		{
-			_editHistory[_currentEditPointer].Rollback();
-			_currentEditPointer--;
-			updateUndoRedoButtons();
-		}
-
-		private void redo()
-		{
-			_currentEditPointer++;
-			_editHistory[_currentEditPointer].Apply();
-			updateUndoRedoButtons();
-		}
-
 		private static string serializeToClipboard(Item item)
 		{
 			var dictionary = new Dictionary<string, string> { { "__type__", item.ItemType.Name } };
@@ -586,30 +547,6 @@ namespace IDME.WpfEditor
 				dictionary[property.Name] = property.Value;
 			}
 			return JsonConvert.SerializeObject(dictionary);
-		}
-
-		#endregion
-
-		#region Edit commands
-
-		private readonly List<IEditCommand> _editHistory = new List<IEditCommand>();
-		private int _currentEditPointer = -1;
-
-		private void updateUndoRedoButtons()
-		{
-			_buttonUndo.IsEnabled = _editHistory.Count > 0 && _currentEditPointer >= 0;
-			_buttonRedo.IsEnabled = _editHistory.Count > 0 && _currentEditPointer < _editHistory.Count - 1;
-		}
-
-		private void performCommand(IEditCommand command)
-		{
-			command.Apply();
-
-			_editHistory.RemoveRange(_currentEditPointer + 1, _editHistory.Count - _currentEditPointer - 1);
-
-			_currentEditPointer = _editHistory.Count;
-			_editHistory.Add(command);
-			updateUndoRedoButtons();
 		}
 
 		#endregion
@@ -652,7 +589,7 @@ namespace IDME.WpfEditor
 				if (itemType != null)
 				{
 					var addItemCommand = new AddItemCommand(_project, itemType, 0, 0);
-					performCommand(addItemCommand);
+					_project.PerformCommand(addItemCommand);
 					Item importedItem = addItemCommand.NewItem;
 
 					foreach (var property in importedItem.Properties)

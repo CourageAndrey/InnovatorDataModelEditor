@@ -1,16 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 
 namespace IDME.WpfEditor.ViewModels
 {
-	public class Project
+	public class Project : INotifyPropertyChanged
 	{
 		#region Properties
 
 		public string FileName
-		{ get; set; }
+		{ get; private set; }
+
+		public string WindowTitle
+		{
+			get
+			{
+				string changesSign = HasChanges ? "*" : string.Empty;
+				return $"Innovator Data Model Editor : {FileName}{changesSign}";
+			}
+		}
 
 		public ICollection<ItemType> ItemTypes
 		{ get; }
@@ -18,23 +28,8 @@ namespace IDME.WpfEditor.ViewModels
 		public ICollection<Item> Items
 		{ get; }
 
-		public bool HasChanges
-		{ get; private set; }
-
-		public event EventHandler Changed;
 		public event EventHandler<Item> ItemAdded;
 		public event EventHandler<Item> ItemRemoved;
-
-		private void raiseChanged()
-		{
-			HasChanges = true;
-
-			var handler = Volatile.Read(ref Changed);
-			if (handler != null)
-			{
-				handler(this, EventArgs.Empty);
-			}
-		}
 
 		private void raiseAdded(Item item)
 		{
@@ -161,6 +156,64 @@ namespace IDME.WpfEditor.ViewModels
 			snapshot.Save(fileName);
 			FileName = fileName;
 			HasChanges = false;
+		}
+
+		#endregion
+
+		#region History
+
+		private readonly List<IEditCommand> _editHistory = new List<IEditCommand>();
+		private int _currentEditPointer = -1;
+
+		public bool CanUndo
+		{ get { return _editHistory.Count > 0 && _currentEditPointer >= 0; } }
+
+		public bool CanRedo
+		{ get { return _editHistory.Count > 0 && _currentEditPointer < _editHistory.Count - 1; } }
+
+		public void PerformCommand(IEditCommand command)
+		{
+			command.Apply();
+
+			_editHistory.RemoveRange(_currentEditPointer + 1, _editHistory.Count - _currentEditPointer - 1);
+
+			_currentEditPointer = _editHistory.Count;
+			_editHistory.Add(command);
+			raiseChanged();
+		}
+
+		public void Undo()
+		{
+			_editHistory[_currentEditPointer].Rollback();
+			_currentEditPointer--;
+			raiseChanged();
+		}
+
+		public void Redo()
+		{
+			_currentEditPointer++;
+			_editHistory[_currentEditPointer].Apply();
+			raiseChanged();
+		}
+
+		#endregion
+
+		#region Implementation of INotifyPropertyChanged
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		public bool HasChanges
+		{ get; private set; }
+
+		public bool CanSave
+		{ get { return !HasChanges; } }
+
+		private void raiseChanged(string propertyName = null)
+		{
+			HasChanges = true;
+
+			var handler = Volatile.Read(ref PropertyChanged);
+			handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 
 		#endregion
