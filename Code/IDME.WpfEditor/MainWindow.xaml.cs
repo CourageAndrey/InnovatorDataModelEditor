@@ -143,13 +143,16 @@ namespace IDME.WpfEditor
 
 		private void onItemChanged(object sender, PropertyChangedEventArgs e)
 		{
-			foreach (var relationship in _incomingRelationships[(Item) sender])
+			if (e.PropertyName == nameof(Item.Left) || e.PropertyName == nameof(Item.Top))
 			{
-				relationship.UpdateConnector();
-			}
-			foreach (var relationship in _outgoingRelationships[(Item) sender])
-			{
-				relationship.UpdateConnector();
+				foreach (var relationship in _incomingRelationships[(Item)sender])
+				{
+					relationship.UpdateConnector();
+				}
+				foreach (var relationship in _outgoingRelationships[(Item)sender])
+				{
+					relationship.UpdateConnector();
+				}
 			}
 		}
 
