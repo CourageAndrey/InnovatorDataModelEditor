@@ -59,7 +59,7 @@ namespace IDME.WpfEditor.ViewModels
 			Properties = properties.ToList().AsReadOnly();
 			foreach (var property in Properties)
 			{
-				property.ValueChanged += (sender, args) => { raiseChanged("Properties"); };
+				property.PropertyChanged += (sender, args) => { raiseChanged("#" + ((PropertyValue) sender).Name); };
 			}
 
 			Relationships = new List<Item>();

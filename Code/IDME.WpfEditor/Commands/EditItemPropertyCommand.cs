@@ -2,7 +2,6 @@
 
 namespace IDME.WpfEditor.Commands
 {
-#warning This class is not used, but need!
 	public class EditItemPropertyCommand : BaseEditCommand
 	{
 		public Item Item
@@ -22,7 +21,7 @@ namespace IDME.WpfEditor.Commands
 		{
 			Item = item;
 			Property = property;
-			ValueBefore = property.Value;
+			ValueBefore = property.PreviousValue;
 			ValueAfter = value;
 		}
 
@@ -34,6 +33,11 @@ namespace IDME.WpfEditor.Commands
 		public override void Rollback()
 		{
 			Property.Value = ValueBefore;
+		}
+
+		public void UpdateValue(string value)
+		{
+			ValueAfter = value;
 		}
 	}
 }

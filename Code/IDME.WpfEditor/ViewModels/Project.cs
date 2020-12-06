@@ -59,6 +59,7 @@ namespace IDME.WpfEditor.ViewModels
 		{
 			if (_suppressHistoryChanges) return;
 
+			Item item = (Item) sender;
 			if (e.PropertyName == nameof(Item.Left) || e.PropertyName == nameof(Item.Top))
 			{
 				var moveItemCommand = _currentEditPointer >= 0 ? _editHistory[_currentEditPointer] as MoveItemCommand : null;
@@ -69,15 +70,27 @@ namespace IDME.WpfEditor.ViewModels
 				}
 				else
 				{
-					Item item = (Item) sender;
 					moveItemCommand = new MoveItemCommand(this, item, item.Left, item.Top);
 					PerformCommand(moveItemCommand, false);
 					// no need to call raiseChanged(); because PerformCommand does
 				}
 			}
-			else
+			else // if (e.PropertyName.StartsWith("#"))
 			{
-				raiseChanged();
+				string propertyName = e.PropertyName.Substring(1);
+				var editItemPropertyCommand = _currentEditPointer >= 0 ? _editHistory[_currentEditPointer] as EditItemPropertyCommand : null;
+				if (editItemPropertyCommand != null && editItemPropertyCommand.Item == sender && editItemPropertyCommand.Property.Name == propertyName)
+				{
+					editItemPropertyCommand.UpdateValue(editItemPropertyCommand.Property.Value);
+					// no need to call raiseChanged(); because non-empty history means that project has already been marked as changed
+				}
+				else
+				{
+					var property = item.Properties.First(p => p.Name == propertyName);
+					editItemPropertyCommand = new EditItemPropertyCommand(this, item, property, property.Value);
+					PerformCommand(editItemPropertyCommand, false);
+					// no need to call raiseChanged(); because PerformCommand does
+				}
 			}
 		}
 

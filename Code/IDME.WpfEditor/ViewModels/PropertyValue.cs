@@ -1,9 +1,10 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace IDME.WpfEditor.ViewModels
 {
-	public class PropertyValue
+	public class PropertyValue : INotifyPropertyChanged
 	{
 		private string _value;
 
@@ -15,26 +16,31 @@ namespace IDME.WpfEditor.ViewModels
 			get => _value;
 			set
 			{
+				PreviousValue = _value;
 				_value = value;
 				raiseChanged();
 			}
 		}
 
-		public event EventHandler ValueChanged;
-
-		private void raiseChanged()
-		{
-			var handler = Volatile.Read(ref ValueChanged);
-			if (handler != null)
-			{
-				handler(this, EventArgs.Empty);
-			}
-		}
+		internal string PreviousValue
+		{ get; private set; }
 
 		public PropertyValue(string name, string value)
 		{
 			Name = name;
 			Value = value;
 		}
+
+		#region Implementation of INotifyPropertyChanged
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private void raiseChanged([CallerMemberName] string propertyName = null)
+		{
+			var handler = Volatile.Read(ref PropertyChanged);
+			handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
+
+		#endregion
 	}
 }
