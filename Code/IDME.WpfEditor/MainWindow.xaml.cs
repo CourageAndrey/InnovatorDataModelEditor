@@ -795,26 +795,33 @@ namespace IDME.WpfEditor
 
 				var item = innovator.newItem();
 				item.loadAML(dom.OuterXml);
-#warning Need not to fail in case of multiple item within AML.
 
-				string itemTypeName = item.getType();
-				var itemType = _project.ItemTypes.FirstOrDefault(it => it.Name == itemTypeName);
-				if (itemType != null)
+				string importError = EnsureSingleItem(null, "add", ref item);
+				if (string.IsNullOrEmpty(importError))
 				{
-					var addItemCommand = new AddItemCommand(_project, itemType, 0, 0);
-					_project.PerformCommand(addItemCommand);
-					Item importedItem = addItemCommand.NewItem;
-
-					foreach (var property in importedItem.Properties)
+					string itemTypeName = item.getType();
+					var itemType = _project.ItemTypes.FirstOrDefault(it => it.Name == itemTypeName);
+					if (itemType != null)
 					{
-						property.Value = item.getProperty(property.Name);
-					}
+						var addItemCommand = new AddItemCommand(_project, itemType, 0, 0);
+						_project.PerformCommand(addItemCommand);
+						Item importedItem = addItemCommand.NewItem;
 
-					_allItemControls[importedItem].Item = importedItem; // update after properties are refreshed
+						foreach (var property in importedItem.Properties)
+						{
+							property.Value = item.getProperty(property.Name);
+						}
+
+						_allItemControls[importedItem].Item = importedItem; // update after properties are refreshed
+					}
+					else
+					{
+						MessageBox.Show($"There are no \"{itemTypeName}\" type found.", "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Error);
+					}
 				}
 				else
 				{
-					MessageBox.Show($"There are no \"{itemTypeName}\" type found.", "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Error);
+					MessageBox.Show(importError, "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Warning);
 				}
 			}
 		}
@@ -866,9 +873,9 @@ namespace IDME.WpfEditor
 
 				var item = innovator.newItem();
 				item.loadAML(dom.OuterXml);
-#warning Need not to fail in case of multiple item within AML.
 
-				if (item.getType() == "ItemType")
+				string importError = EnsureSingleItem("ItemType", "add", ref item);
+				if (string.IsNullOrEmpty(importError))
 				{
 					string itemTypeName = item.getProperty("name");
 					if (_project.ItemTypes.Any(it => it.Name == itemTypeName))
@@ -901,8 +908,30 @@ namespace IDME.WpfEditor
 				}
 				else
 				{
-					MessageBox.Show("Only items with type \"ItemType\" can be imported.", "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Warning);
+					MessageBox.Show(importError, "Impossible to import", MessageBoxButton.OK, MessageBoxImage.Warning);
 				}
+			}
+		}
+
+		private static string EnsureSingleItem(string expectedItemType, string expectedAction, ref Aras.IOM.Item item)
+		{
+			var allItems = item.Enumerate().Where(i =>
+				(string.IsNullOrEmpty(expectedItemType) || i.getType() == expectedItemType) &&
+				(string.IsNullOrEmpty(expectedAction) || i.getAction() == expectedAction)).ToList();
+			if (allItems.Count > 1)
+			{
+				string typeFilter = !string.IsNullOrEmpty(expectedItemType) ? $" of '{expectedItemType}' type" : string.Empty;
+				string actionFilter = !string.IsNullOrEmpty(expectedAction) ? $" with '{expectedAction}' action" : string.Empty;
+				return $"AML has to contain single Item {typeFilter}{actionFilter} in order to be processed.";
+			}
+			else if (allItems.Count == 1)
+			{
+				item = allItems[0];
+				return null;
+			}
+			else // if (allItems.Count == 0)
+			{
+				return $"No Items of '{expectedItemType}' type with '{expectedAction}' action found.";
 			}
 		}
 
