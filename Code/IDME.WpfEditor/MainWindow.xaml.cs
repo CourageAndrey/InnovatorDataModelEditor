@@ -883,8 +883,17 @@ namespace IDME.WpfEditor
 						var itemType = new ItemType(
 							itemTypeName,
 							item.getProperty("is_relationship") == "1",
-#warning Need to detect item-type properties!
-							properties.Select(propertyItem => new Property { Name = propertyItem.getProperty("name") }),
+							properties.Select(propertyItem =>
+							{
+								string propertyName = propertyItem.getProperty("name");
+								string dataSourceTypeName = propertyItem.getPropertyAttribute("data_source", "keyed_name");
+								var dataSourceType = _project.ItemTypes.FirstOrDefault(type => type.Name == dataSourceTypeName);
+								return new Property
+								{
+									Name = propertyName,
+									DataSourceType = dataSourceType,
+								};
+							}),
 							_project.ItemTypes.Where(it => it.IsRelationship && relationships.Contains(it.Name)));
 
 						_project.ItemTypes.Add(itemType);
