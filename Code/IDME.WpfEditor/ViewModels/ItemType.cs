@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace IDME.WpfEditor.ViewModels
 {
@@ -38,33 +39,81 @@ namespace IDME.WpfEditor.ViewModels
 
 		#region List
 
-		public static readonly ItemType PropertyItemType = new ItemType("Property", true, new Property[0], new ItemType[0]);
+		public static readonly ItemType PropertyItemType;
+		public static readonly ItemType RelationshipTypeItemType;
+		public static readonly ItemType ItemTypeItemType;
 
-		public static readonly ItemType RelationshipTypeItemType = new ItemType("RelationshipType", true, new Property[0], new ItemType[0]);
+		public static readonly IDictionary<string, ItemType> DefaultItemTypes;
 
-		public static readonly ItemType ItemTypeItemType = new ItemType(
-			"ItemType",
-			false,
-			new[]
-			{
-				new Property
-				{
-					Name = "name",
-					DataSourceType = null,
-				}
-			},
-			new[]
-			{
-				PropertyItemType,
-				RelationshipTypeItemType
-			});
-
-		public static readonly IDictionary<string, ItemType> DefaultItemTypes = new Dictionary<string, ItemType>
+		static ItemType()
 		{
-			{ ItemTypeItemType.Name, ItemTypeItemType },
-			{ PropertyItemType.Name, PropertyItemType },
-			{ RelationshipTypeItemType.Name, RelationshipTypeItemType },
-		};
+			PropertyItemType = new ItemType(
+				"Property",
+				true,
+				new[]
+				{
+					new Property
+					{
+						Name = "name",
+						DataSourceType = null,
+					},
+					new Property
+					{
+						Name = "data_type",
+						DataSourceType = null,
+					},
+					new Property
+					{
+						Name = "stored_length",
+						DataSourceType = null,
+					},
+					new Property
+					{
+						Name = "data_source",
+						DataSourceType = null,
+					},
+				},
+				new ItemType[0]);
+
+			RelationshipTypeItemType = new ItemType(
+				"RelationshipType",
+				true,
+				new[]
+				{
+					new Property
+					{
+						Name = "related_id",
+						DataSourceType = null,
+					}
+				},
+				new ItemType[0]);
+
+			ItemTypeItemType = new ItemType(
+				"ItemType",
+				false,
+				new[]
+				{
+					new Property
+					{
+						Name = "name",
+						DataSourceType = null,
+					}
+				},
+				new[]
+				{
+					PropertyItemType,
+					RelationshipTypeItemType
+				});
+
+			RelationshipTypeItemType.Properties.Single( /*"related_id"*/).DataSourceType = ItemTypeItemType;
+
+			DefaultItemTypes = new Dictionary<string, ItemType>
+			{
+				{ ItemTypeItemType.Name, ItemTypeItemType },
+				{ PropertyItemType.Name, PropertyItemType },
+				{ RelationshipTypeItemType.Name, RelationshipTypeItemType },
+			};
+		}
 
 		#endregion
 	}
